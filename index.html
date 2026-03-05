@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced LMS Exercise Updater</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .log-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .log-container::-webkit-scrollbar-track {
+            background: #1f2937;
+        }
+
+        .log-container::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 4px;
+        }
+
+        .log-container::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+        }
+
+        .input-focus {
+            @apply focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-colors border-gray-300;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 min-h-screen font-sans flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-indigo-700 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-vial-circle-check text-2xl"></i>
+                <h1 class="text-xl font-bold tracking-tight">LotusLMS Pro Updater</h1>
+            </div>
+            <div class="text-xs bg-indigo-800 px-3 py-1 rounded-full text-indigo-100 font-mono">
+                v2.3 - Dynamic API Endpoints
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-6 w-full flex-grow flex flex-col lg:flex-row gap-6">
+
+        <!-- Cột Form nhập liệu -->
+        <div class="lg:w-2/5 w-full bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col gap-5">
+            <div>
+                <h2 class="text-lg font-bold text-slate-700 leading-tight">Cấu hình cập nhật</h2>
+                <p class="text-xs text-slate-500">Cập nhật danh sách câu hỏi cho Exercise trên LMS</p>
+            </div>
+
+            <form id="updateForm" class="flex flex-col gap-4">
+
+                <!-- API URL Option -->
+                <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-100">
+                    <label class="block text-sm font-bold text-indigo-900 mb-1">
+                        <i class="fas fa-link mr-1"></i> API Base URL
+                    </label>
+                    <div class="flex gap-2">
+                        <input type="text" id="base_url" required value="https://cloud-beta-api.lotuslms.com"
+                            placeholder="https://..."
+                            class="flex-grow px-3 py-2 border border-indigo-200 rounded input-focus text-sm font-mono">
+                    </div>
+                    <p class="text-[10px] text-indigo-500 mt-1 uppercase tracking-wider font-semibold">
+                        Không bao gồm dấu gạch chéo (/) ở cuối
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Root Type -->
+                    <div class="col-span-1">
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Root Node Type</label>
+                        <select id="root_node_ntype"
+                            class="w-full px-3 py-2 border rounded input-focus bg-slate-50 text-sm">
+                            <option value="syllabus">Syllabus (Giáo trình)</option>
+                            <option value="question-bank">Question Bank (Ngân hàng)</option>
+                            <option value="exam-sco">Exam SCO (Kỳ thi)</option>
+                        </select>
+                    </div>
+                    <!-- Root IID -->
+                    <div class="col-span-1">
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Root Node IID</label>
+                        <input type="text" id="root_node_iid" required placeholder="IID của Root..."
+                            class="w-full px-3 py-2 border rounded input-focus">
+                    </div>
+                </div>
+
+                <!-- Exercise IID -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Exercise (Target) IID</label>
+                    <input type="text" id="exercise_iid" required placeholder="IID bài tập cần cập nhật..."
+                        class="w-full px-3 py-2 border rounded input-focus">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Token -->
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">_sand_token</label>
+                        <input type="password" id="token" required placeholder="Dán token..."
+                            class="w-full px-3 py-2 border rounded input-focus">
+                    </div>
+                    <!-- UIID -->
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">_sand_uiid</label>
+                        <input type="text" id="uiid" required placeholder="Dán uiid..."
+                            class="w-full px-3 py-2 border rounded input-focus">
+                    </div>
+                </div>
+
+                <!-- Chế độ cập nhật -->
+                <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Chế độ ghi dữ liệu</label>
+                    <div class="flex gap-6">
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="radio" name="mode" value="replace" checked class="w-4 h-4 text-indigo-600">
+                            <span class="ml-2 text-sm font-medium">Ghi đè hoàn toàn</span>
+                        </label>
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="radio" name="mode" value="append" class="w-4 h-4 text-indigo-600">
+                            <span class="ml-2 text-sm font-medium">Chèn thêm vào cuối</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Danh sách câu hỏi -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Danh sách Question IIDs</label>
+                    <textarea id="question_ids" required rows="5"
+                        placeholder="Nhập các IID cách nhau bằng dấu phẩy hoặc xuống dòng..."
+                        class="w-full px-3 py-2 border border-slate-300 rounded input-focus font-mono text-sm"></textarea>
+                </div>
+
+                <button type="submit" id="submitBtn"
+                    class="mt-2 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-all flex items-center justify-center gap-2 transform active:scale-[0.98]">
+                    <i class="fas fa-rocket"></i> Thực thi cập nhật
+                </button>
+            </form>
+        </div>
+
+        <!-- Cột Log / Console -->
+        <div
+            class="lg:w-3/5 w-full bg-slate-900 rounded-xl shadow-2xl border border-slate-800 flex flex-col overflow-hidden">
+            <div class="bg-slate-800 px-4 py-3 flex justify-between items-center border-b border-slate-700">
+                <h2 class="text-sm font-mono text-slate-300 flex items-center gap-2">
+                    <span class="flex gap-1.5">
+                        <span class="w-3 h-3 rounded-full bg-red-500"></span>
+                        <span class="w-3 h-3 rounded-full bg-yellow-500"></span>
+                        <span class="w-3 h-3 rounded-full bg-green-500"></span>
+                    </span>
+                    <span class="ml-2">Live Logs Console</span>
+                </h2>
+                <button onclick="clearLog()"
+                    class="text-[10px] uppercase tracking-wider font-bold text-slate-400 hover:text-white transition-colors px-3 py-1 rounded bg-slate-700 hover:bg-slate-600">
+                    Clear
+                </button>
+            </div>
+
+            <div id="logArea"
+                class="log-container flex-grow p-4 font-mono text-[13px] overflow-y-auto text-slate-300 bg-slate-950"
+                style="min-height: 500px;">
+                <div class="text-indigo-400">System Ready. Awaiting user input...</div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal Notifications -->
+    <div id="messageModal"
+        class="fixed inset-0 bg-slate-900/80 hidden items-center justify-center z-50 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-4">
+            <div id="modalIcon" class="mx-auto flex items-center justify-center h-16 w-16 rounded-full mb-4"></div>
+            <h3 id="modalTitle" class="text-xl font-bold text-slate-900 text-center mb-2"></h3>
+            <p id="modalDesc" class="text-slate-500 text-center mb-6"></p>
+            <button onclick="closeModal()"
+                class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl transition-colors">
+                Xác nhận
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const logArea = document.getElementById('logArea');
+        const submitBtn = document.getElementById('submitBtn');
+        const updateForm = document.getElementById('updateForm');
+
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            const time = new Date().toLocaleTimeString('en-GB', { hour12: false });
+
+            let colorClass = 'text-slate-400';
+            if (message.includes('✅')) colorClass = 'text-green-400 font-bold';
+            else if (message.includes('❌') || message.includes('💥') || type === 'error') colorClass = 'text-red-400';
+            else if (message.includes('🔍') || message.includes('📡')) colorClass = 'text-sky-400';
+            else if (message.includes('⚠️') || message.includes('🔐')) colorClass = 'text-amber-400';
+            else if (message.includes('🚀')) colorClass = 'text-indigo-400 font-bold text-base my-2';
+
+            div.className = `${colorClass} py-0.5 leading-relaxed border-l-2 border-transparent pl-2 hover:bg-slate-800 transition-colors`;
+            div.innerHTML = `<span class="text-slate-600 mr-2 text-[11px]">${time}</span> ${message}`;
+
+            logArea.appendChild(div);
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+
+        function clearLog() {
+            logArea.innerHTML = '<div class="text-indigo-400 italic">Logs cleared. Waiting for new tasks...</div>';
+        }
+
+        function setLoading(isLoading) {
+            if (isLoading) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Processing...';
+                submitBtn.classList.add('opacity-80', 'cursor-not-allowed');
+            } else {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-rocket"></i> Thực thi cập nhật';
+                submitBtn.classList.remove('opacity-80', 'cursor-not-allowed');
+            }
+        }
+
+        function showMessage(title, description, isSuccess) {
+            const modal = document.getElementById('messageModal');
+            const icon = document.getElementById('modalIcon');
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalDesc').textContent = description;
+
+            if (isSuccess) {
+                icon.className = "mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 text-green-600 text-3xl mb-4";
+                icon.innerHTML = '<i class="fas fa-check-circle"></i>';
+            } else {
+                icon.className = "mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 text-red-600 text-3xl mb-4";
+                icon.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+            }
+            modal.classList.replace('hidden', 'flex');
+        }
+
+        function closeModal() {
+            document.getElementById('messageModal').classList.replace('flex', 'hidden');
+        }
+
+        function parseQuestionIds(text) {
+            return text.split(/[\s,]+/).map(id => id.trim()).filter(id => id !== '');
+        }
+
+        // --- Core Logic ---
+
+        async function fetchQuestionById(baseUrl, questionId, token, uiid) {
+            log(`🔍 Tìm câu hỏi: ${questionId}`);
+            const url = `${baseUrl}/question/index/search`;
+            const params = new URLSearchParams({ '_sand_get_total': '0', 'ntype': 'question', 'q': questionId, '_sand_domain': 'aeglobal' });
+            const body = new URLSearchParams({ '_sand_token': token, '_sand_uiid': uiid });
+
+            try {
+                const response = await fetch(`${url}?${params.toString()}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: body
+                });
+
+                if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
+
+                const json = await response.json();
+                if (json.success && json.result?.length > 0) {
+                    const q = json.result[0];
+                    log(`✅ OK: ${q.iid} (${q.tpl_type})`);
+                    return q;
+                }
+                throw new Error(`ID ${questionId} not found`);
+            } catch (e) {
+                log(`❌ Error ${questionId}: ${e.message}`);
+                return null;
+            }
+        }
+
+        async function fetchExerciseNode(baseUrl, exerciseIid, rootType, rootIid, token, uiid) {
+            log(`📥 Đang lấy dữ liệu Exercise: ${exerciseIid} (Root: ${rootType})`);
+            const url = `${baseUrl}/exercise/editor/fetch-node`;
+            const params = new URLSearchParams({
+                ntype: 'exercise',
+                depth: '1',
+                editing_syllabus: '1',
+                root_node_ntype: rootType,
+                root_node_iid: rootIid,
+                iid: exerciseIid,
+                _sand_domain: 'aeglobal'
+            });
+            const body = new URLSearchParams({ '_sand_token': token, '_sand_uiid': uiid });
+
+            try {
+                const response = await fetch(`${url}?${params.toString()}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: body
+                });
+
+                if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
+
+                const json = await response.json();
+                if (json.success) {
+                    log(`✅ Đã fetch cấu trúc bài tập.`);
+                    return json.result;
+                }
+                throw new Error(json.err_msg || 'Fetch failed');
+            } catch (e) {
+                log(`💥 Lỗi fetch node: ${e.message}`);
+                throw e;
+            }
+        }
+
+        async function runUpdateProcess(formData) {
+            const { baseUrl, exercise_iid, root_node_iid, root_node_ntype, token, uiid, question_ids, mode } = formData;
+
+            log(`🚀 KHỞI ĐỘNG CẬP NHẬT [Endpoint: ${baseUrl}]`);
+
+            try {
+                // 1. Get current state
+                const currentExercise = await fetchExerciseNode(baseUrl, exercise_iid, root_node_ntype, root_node_iid, token, uiid);
+
+                // 2. Resolve new questions
+                const newQuestions = [];
+                for (const qid of question_ids) {
+                    const q = await fetchQuestionById(baseUrl, qid, token, uiid);
+                    if (q) newQuestions.push(q);
+                }
+
+                if (newQuestions.length === 0) throw new Error("Không lấy được dữ liệu câu hỏi nào hợp lệ.");
+
+                // 3. Merge Logic
+                let merged = [];
+                if (mode === 'replace') {
+                    merged = newQuestions;
+                } else {
+                    merged = [...(currentExercise.children || []), ...newQuestions];
+                }
+
+                // Deduplicate
+                const unique = [];
+                const seen = new Set();
+                for (const item of merged) {
+                    if (!seen.has(item.iid)) {
+                        seen.add(item.iid);
+                        unique.push(item);
+                    }
+                }
+
+                log(`🔗 Tổng cộng sẽ có ${unique.length} câu hỏi sau khi xử lý.`);
+
+                // 4. Update request
+                const payload = new URLSearchParams();
+                payload.append('id', String(currentExercise.id));
+                payload.append('iid', String(currentExercise.iid));
+                payload.append('ntype', 'exercise');
+                payload.append('syllabus', root_node_iid);
+                payload.append('root_node_iid', root_node_iid);
+                payload.append('root_node_ntype', root_node_ntype);
+                payload.append('submit', '1');
+                payload.append('_sand_step', 'children');
+                payload.append('_sand_ajax', '1');
+                payload.append('_sand_token', token);
+                payload.append('_sand_uiid', uiid);
+                payload.append('_sand_domain', 'aeglobal');
+
+                const ts = Math.floor(Date.now() / 1000);
+                unique.forEach((q, i) => {
+                    const p = `children[${i}]`;
+                    payload.append(`${p}[id]`, String(q.id));
+                    payload.append(`${p}[iid]`, String(q.iid));
+                    payload.append(`${p}[ntype]`, q.ntype || 'question');
+                    payload.append(`${p}[type]`, String(q.type || '2'));
+                    payload.append(`${p}[tpl_type]`, q.tpl_type || 'mc_answer_text');
+                    payload.append(`${p}[ts]`, String(ts + i));
+                });
+
+                log(`📤 Gửi yêu cầu cập nhật lên Server...`);
+                const response = await fetch(`${baseUrl}/exercise/update`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: payload
+                });
+
+                if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
+
+                const result = await response.json();
+                if (result.success || result.err_code === 0) {
+                    log(`✅ HOÀN TẤT THÀNH CÔNG!`);
+                    showMessage("Xử lý hoàn tất", `Đã cập nhật ${unique.length} câu hỏi vào Exercise thành công.`, true);
+                } else {
+                    throw new Error(result.err_msg || 'Lỗi từ máy chủ LMS');
+                }
+
+            } catch (e) {
+                log(`💥 THẤT BẠI: ${e.message}`, 'error');
+                showMessage("Lỗi hệ thống", e.message, false);
+            }
+        }
+
+        updateForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const q_ids = parseQuestionIds(document.getElementById('question_ids').value);
+
+            if (q_ids.length === 0) {
+                showMessage("Thiếu dữ liệu", "Vui lòng nhập danh sách Question IIDs.", false);
+                return;
+            }
+
+            const rawBaseUrl = document.getElementById('base_url').value.trim();
+            // Xử lý loại bỏ dấu / cuối nếu người dùng nhập nhầm
+            const baseUrl = rawBaseUrl.endsWith('/') ? rawBaseUrl.slice(0, -1) : rawBaseUrl;
+
+            const data = {
+                baseUrl: baseUrl,
+                exercise_iid: document.getElementById('exercise_iid').value.trim(),
+                root_node_iid: document.getElementById('root_node_iid').value.trim(),
+                root_node_ntype: document.getElementById('root_node_ntype').value,
+                token: document.getElementById('token').value.trim(),
+                uiid: document.getElementById('uiid').value.trim(),
+                mode: document.querySelector('input[name="mode"]:checked').value,
+                question_ids: q_ids
+            };
+
+            setLoading(true);
+            await runUpdateProcess(data);
+            setLoading(false);
+        });
+    </script>
+</body>
+
+</html>
